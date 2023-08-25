@@ -1,0 +1,9 @@
+"this is line one"
+////////////////////
+##########
+"this is line 4"
+/////////////
+111111111111111111111111111111111
+"this should still be line 7"
+int bool "test on line 8 starts at char 10"
+"line 9"

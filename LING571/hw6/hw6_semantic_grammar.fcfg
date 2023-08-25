@@ -1,0 +1,51 @@
+% start S
+
+S[SEM = <?subj(?vp)>] -> NP[SEM=?subj] VP[SEM=?vp]
+S[SEM = <?subj(?vp)>] -> NP[SEM=?subj] AUX NOT VPNEG[SEM=?vp]
+S[SEM = <?subj(?vp)>] -> NP[SEM=?subj] AUX NOT VPNEG[SEM=?vp]
+S[SEM = <?subj1(?vp)|?subj2(?vp)>] -> NP[SEM=?subj1] OR[SEM=?o] NP[SEM=?subj2] VP[SEM=?vp]
+S[SEM = <?subj(?vp)>] -> NPN[SEM=?subj] VP[SEM=?vp]
+
+VP[SEM=?v] -> IV[SEM=?v]
+VP[SEM=<?o(?v)(?m)>] -> VP[SEM=?v] OR[SEM=?o] VP[SEM=?m]
+VP[SEM=<?v(?n)>] -> TV[SEM=?v] NP[SEM=?n]
+VPNEG[SEM=<?o(?v)(?m)>] -> VPNEG[SEM=?v] ORAND[SEM=?o] VPNEG[SEM=?m] 
+VPNEG[SEM=<\x.-exists e.(eating(e) & eater(e,x))>] -> 'eat'
+VPNEG[SEM=<\x.-exists e.(drinking(e) & drinker(e,x))>] -> 'drink'
+
+NP[SEM=<?det(?n)>] -> Det[SEM=?det] NOM[SEM=?n]
+NPN[SEM=?n] -> NOBODY[SEM=?n]
+NOM[SEM=?n] -> N[SEM=?n]
+NOM[SEM=<?o(?n1)(?n2)>] -> N[SEM=?n1] OR[SEM=?o] N[SEM=?n2]
+NP[SEM=?n] -> PROPN[SEM=?n]
+
+Det[SEM=<\Q P.exists x.(Q(x) & P(x))>] -> 'a'
+Det[SEM=<\Q P.exists x.(Q(x) & P(x))>] -> 'an'
+Det[SEM=<\Q P.all x.(Q(x) -> -P(x))>] -> 'no'
+Det[SEM=<\Q P.all x.(Q(x) -> P(x))>] -> 'every'
+Det[SEM=<\Q P.all x.(Q(x) -> P(x))>] -> 'all'
+
+PROPN[SEM=<\J.J(John)>] -> 'John'
+PROPN[SEM=<\M.M(Mary)>] -> 'Mary'
+PROPN[SEM=<\J.J(Jack)>] -> 'Jack'
+N[SEM=<\s.student(s)>] -> 'student'
+N[SEM=<\s.student(s)>] -> 'students'
+N[SEM=<\s.sandwich(s)>] -> 'sandwich'
+N[SEM=<\p.person(p)>] -> 'person'
+N[SEM=<\s.soda(s)>] -> 'soda'
+N[SEM=<\e.essay(e)>] -> 'essay'
+N[SEM=<\b.bagel(b)>] -> 'bagel'
+
+IV[SEM=<\x.exists e.(eating(e) & eater(e,x))>] -> 'eats'
+IV[SEM=<\x.exists e.(eating(e) & eater(e,x))>] -> 'eat'
+IV[SEM=<\x.exists e.(drinking(e) & drinker(e,x))>] -> 'drink'
+IV[SEM=<\x.exists e.(drinking(e) & drinker(e,x))>] -> 'drinks'
+TV[SEM=<\W. \z.W (\y.exists e.(eating(e) & eater(e,z) & eaten(e,y)))>] -> 'eats'
+TV[SEM=<\W. \z.W (\y.exists e.(drinking(e) & drinker(e,z) & drunk(e,y)))>] -> 'drinks'
+TV[SEM=<\W. \z.W (\y.exists e.(writing(e) & writer(e,z) & written(e,y)))>] -> 'writes'
+
+NOT -> 'not'
+AUX -> 'does'
+NOBODY[SEM=<\P.-(exists x.person(x) & P(x))>] -> 'nobody'
+OR[SEM=<\Q P z.(P(z) | Q(z))>] -> 'or'
+ORAND[SEM=<\Q P z.(P(z) & Q(z))>] -> 'or'

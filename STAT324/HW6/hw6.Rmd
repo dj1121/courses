@@ -1,0 +1,276 @@
+---
+title: "Stat 324 HW6: Hypothesis Tests for 2 Independent Populations"
+author: "Devin Johnson, Dis. 313"
+date: "November 3, 2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+
+## Problem 1
+```{r}
+# Data for problem 1
+n_am = 8
+n_eu = 5
+xbar_am = 220
+xbar_eu = 204
+svar_am = 21
+svar_eu = 23
+alpha = 0.1
+```
+
+**--1A: Plots and statistics--**  
+A two sample t test with equal variance assumption is appropriate for the following reasons:
+
+* We have two independent populations which we would like to compare.
+* We can assume both populations are normally distributed.
+* Samples are independent and random.
+* We find $\frac{sd_{am}}{sd_{eu}} = \frac{\sqrt{21}}{\sqrt{23}} = 0.96$ and $0.5<0.96<2$ so we can assume equal variances.
+
+$H_o: \mu_{am} - \mu_{eu} = 0$  
+$H_a: \mu_{am} - \mu_{eu} > 0$  
+$\alpha = 0.1$
+
+**--1B: t test w/ equal variances--**  
+```{r}
+sp = sqrt(((n_am - 1)*(svar_am) + (n_eu -1)*(svar_eu)) / (n_am + n_eu - 2)) # Pooled SD
+t_obs = (xbar_am - xbar_eu) / (sp*sqrt((1/n_am) + (1/n_eu))) # t statistic
+crit_t = abs(qt(alpha/2, n_am + n_eu - 2)) # t n1+n2-2,alpha/2
+
+diff_obs = (t_obs) * (sp*sqrt((1/n_am) + (1/n_eu))) # Get the raw value of xbars
+crit_diff = (crit_t) * (sp*sqrt((1/n_am) + (1/n_eu)))
+
+cat(paste(" Pooled SD:", sp, "\n", "t observed:", t_obs, "\n", "Critical t:", crit_t, "\n", "Observed xbar difference:", diff_obs, "\n", "Critical xbar difference:", crit_diff))
+```
+
+Our t statistic falls into the rejection region and our observed difference in xbars is greater than our critical difference. Therefore, we reject $H_o$
+
+**--1C: P value of 1B test--**
+```{r}
+pval = pt(q = t_obs, df = n_am + n_eu - 2, lower.tail = FALSE) # Calculate pvalue (one-sided, above)
+print(pval)
+```
+
+Our p value is significantly $< \alpha$, so we reject $H_o$.  
+
+**--1D: Changing $\delta_o$--**
+This would change our $\delta_o$ which would affect the numerator of our t observed value. The numerator would become smaller and thus the area above the t observed value would be greater. This area corresponds to the p-value. Thus the p-value would be greater for this test.  
+
+**--1E: t test w/ unequal variances--**
+We make the assumption that the variances are not equal.
+```{r}
+tobs_welch = (xbar_am - xbar_eu - 0) / (sqrt((svar_am/n_am) + (svar_eu/n_eu)))
+df_welch = (((svar_am/n_am)+(svar_eu/n_eu))^2) / (((svar_am/n_am)^2 / (n_am - 1)) + ((svar_eu/n_eu)^2 / (n_eu - 1)))
+pval_welch = 1- pt(q = tobs_welch, df = df_welch)
+
+cat(paste(" T observed:", tobs_welch, "\n", "P Value:", pval_welch))
+```
+This P value is larger though it is still able to reject $H_o$
+
+## Problem 2
+```{r}
+# Data for problem 2
+midwest = c(16.2,12.9,17.3,14.6,18.6,10.8,11.2,16.6,16.6,24.4,20.3,20.9,9.6,15.1,18.3)
+south = c(22.2,19.2,9.3,24.6,20.2,15.8,18.0,12.2,20.1,16.0,17.5,18.2,22.8,11.5)
+alpha = 0.1
+```
+
+**--2A: Plots and statistics--**  
+I chose histograms to get a view of the variances of  samples side by side and I chose QQ plots to assess the normality of the two populations.
+```{r}
+# Plots
+hist(midwest)
+hist(south)
+qqnorm(midwest, main = "QQ North")
+qqnorm(south, main = "QQ South")
+
+# Sample statistics
+xbar_midwest = mean(midwest)
+xbar_south = mean(south)
+svar_midwest = var(midwest)
+svar_south = var(south)
+n_midwest = length(midwest)
+n_south = length(south)
+```
+
+**--2B: t test with equal variances--**  
+Assumptions:
+
+* Assuming two independent populations.
+* Assuming both populations are normally distributed (by QQ plot)
+* Assuming samples are independent and random.
+* We find $\frac{sd_{m}}{sd_{s}} = \frac{\sqrt{16.44}}{\sqrt{19.56}} = 0.92$ and $0.5<0.92<2$ so we can assume equal variances.
+
+$H_o: \mu_{m} - \mu_{s} = 0$  
+$H_a: \mu_{m} - \mu_{s} \neq 0$  
+$\alpha = 0.1$
+
+```{r}
+sp = sqrt(((n_midwest - 1)*(svar_midwest) + (n_south -1)*(svar_south)) / (n_midwest + n_south - 2)) # Pooled SD
+tobs = (xbar_midwest - xbar_south - 0) / (sp*sqrt((1/n_midwest) + (1/n_south))) # t statistic
+crit_t = abs(qt(alpha/2, n_midwest + n_south - 2)) # t n1+n2-2,alpha/2
+pval = 2*pt(q = tobs, df = n_midwest + n_south - 2) # Calculate pvalue (two-sided)
+
+cat(paste(" Pooled SD:", sp, "\n", "t observed:", tobs, "\n", "Critical t:", crit_t), "\n", "P value:", pval, "\n")
+```
+P value from calculator: 0.3621934  
+P value from table: P > 0.25  
+Our p value is significantly $> \alpha$, so we fail to reject $H_o$.  
+
+**--2C: 90% confidence interval w/ equal variances--**
+```{r}
+# Calculate confidence interval manually (uses data from part b)
+l = (xbar_midwest - xbar_south) - (crit_t * sp * sqrt((1/n_midwest) + (1/n_south)))
+u = (xbar_midwest - xbar_south) + (crit_t * sp * sqrt((1/n_midwest) + (1/n_south)))
+cat(paste(" l:", l, "\n", "u", u))
+
+# Calculate using R functions
+t.test(midwest, south, var.equal = TRUE, mu = 0, alternative = "two.sided", conf.level = 0.9)
+```
+The confidence interval tells us that of 90% of the time we create a confidence interval in such a manner, we would capture the true difference in means. This differs from a simple hypothesis test because the hypothesis test only gives us evidence as to whether the true difference in means in greater, less, or equal to $H_o$. The confidence interval instead gives us a range of possible true differences.
+
+## Problem 3
+```{r}
+# Data for problem 3
+dynamic = c(370,360,510,445,295,315,490,345,450,505,335,280,325,500)
+static = c(430,445,455,455,490,535)
+alpha = 0.05
+```
+
+**--3A: Plots and statistics--**
+I chose histograms to get a view of the variances of  samples side by side and I chose QQ plots to assess the normality of the two populations.
+```{r}
+# Plots
+hist(dynamic)
+hist(static)
+qqnorm(dynamic, main = "QQ Dynamic")
+qqnorm(static, main = "QQ Static")
+
+# Sample statistics
+xbar_dynamic = mean(dynamic)
+xbar_static = mean(static)
+svar_dynamic = var(dynamic)
+svar_static = var(static)
+n_dynamic = length(dynamic)
+n_static = length(static)
+```
+
+**--3B: t test w/ unequal variancecs--** 
+Assumptions:
+
+* Assuming two independent populations.
+* Assuming both populations are normally distributed (even though QQ plot doesn't look too good.)
+* Assuming samples are independent and random.
+* We assume unequal variances.
+
+$H_o: \mu_{dynamic} - \mu_{static} = 0$  
+$H_a: \mu_{dynamic} - \mu_{static} < 0$  
+$\alpha = 0.05$
+
+```{r}
+# Use welch t test since unequal variances
+tobs_welch = (xbar_dynamic - xbar_static - 0) / (sqrt((svar_dynamic/n_dynamic) + (svar_static/n_static)))
+df_welch = (((svar_dynamic/n_dynamic)+(svar_static/n_static))^2) / (((svar_dynamic/n_dynamic)^2 / (n_dynamic - 1)) + ((svar_static/n_static)^2 / (n_static - 1)))
+pval_welch = pt(q = tobs_welch, df = df_welch) # By default pt gets area under t value
+ 
+cat(paste(" T observed:", tobs_welch, "\n", "P Value:", pval_welch))
+```
+Our p value is $<\alpha$ so we reject $H_o$
+
+**--3C: 95% CI w/ unequal variances--**
+```{r}
+# Statistics required for CI
+alpha = 0.05
+crit_t = abs(qt(alpha/2, df_welch)) # t n1+n2-2,alpha/2
+multiplier = sqrt((svar_dynamic/n_dynamic) + (svar_static/n_static))
+
+# Calculate confidence interval manually assuming no pooling (uses data from part b) (USING TWO SIDED AS PER https://piazza.com/class/jlld5abk9jz46m?cid=202)
+l = (xbar_dynamic - xbar_static) - (crit_t * sqrt((svar_dynamic/n_dynamic) + (svar_static/n_static)))
+u = (xbar_dynamic - xbar_static) + (crit_t * sqrt((svar_dynamic/n_dynamic) + (svar_static/n_static)))
+cat(paste(" l:", l, "\n", "u", u))
+
+# Calculate using R functions (USING TWO SIDED AS PER https://piazza.com/class/jlld5abk9jz46m?cid=202)
+t.test(dynamic, static, var.equal = FALSE, mu = 0, alternative = "two.sided", conf.level = 0.95)
+```
+The confidence interval tells us that of 95% of the time we create a confidence interval in such a manner, we would capture the true difference in means. This differs from a simple hypothesis test because the hypothesis test only gives us evidence as to whether the true difference in means in greater, less, or equal to $H_o$. The confidence interval instead gives us a range of possible true differences.
+
+##Problem 4
+```{r}
+# Data for problem 4
+a = c(23.1,21.4,31.6,34.5,21.9,36.0,30.2,33.1,39.5)
+b = c(32.7,36.8,39.1,37.3,40.3,46.8,41.4,53.0,55.6,54.1,28.3)
+alpha = 0.05
+```
+
+**--4A: Plots and statistics--**
+I chose histograms to get a view of the variances of  samples side by side and I chose QQ plots to assess the normality of the two populations.
+```{r}
+# Plots
+hist(a)
+hist(b)
+qqnorm(a, main = "QQ a")
+qqnorm(b, main = "QQ b")
+
+# Sample statistics
+xbar_a = mean(a)
+xbar_b = mean(b)
+svar_a = var(a)
+svar_b = var(b)
+n_a = length(a)
+n_b = length(b)
+```
+
+**--4B: Bootstrap Test--**
+```{r}
+# Bootstrap function
+boottwo = function(dat1, dat2, nboot) {
+  bootstat = numeric(nboot)
+  obsdiff = mean(dat1) - mean(dat2)
+  n1 = length(dat1)
+  n2 = length(dat2)
+  for(i in 1:nboot) {
+    samp1 = sample(dat1, size = n1, replace = T)
+    samp2 = sample(dat2, size = n2, replace = T)
+    bootmean1 = mean(samp1)
+    bootmean2 = mean(samp2)
+    bootvar1 = var(samp1)
+    bootvar2 = var(samp2)
+    bootstat[i] = ((bootmean1 - bootmean2) - obsdiff)/sqrt((bootvar1/n1) + (bootvar2/n2))
+}
+  return(bootstat)
+}
+```
+
+$H_o: \mu_{a} - \mu_{b} = 0$  
+$H_a: \mu_{a} - \mu_{b} \neq 0$  
+$\alpha = 0.05$
+
+```{r}
+# Create distribution
+set.seed(1)
+boot = boottwo(a, b, 10000)
+hist(boot)
+
+# Perform test
+t_obs = (xbar_a - xbar_b) / sqrt((svar_a / n_a)  + (svar_b / n_b))
+m_high = sum(boot > t_obs)
+pval = m_high/ 10000
+
+cat(paste(" T observed:", t_obs, "\n", "P Value:", pval))
+```
+Conclusion: P value is significantly $<\alpha$ so reject $H_o$.
+
+**--4C: t tests--**
+```{r}
+# Using R functions
+t.test(a, b, var.equal=TRUE, alternative="two.sided")
+t.test(a, b, var.equal=FALSE, alternative="two.sided")
+```
+P values from high to low are equal variance, welch, bootstrap. However, in general the p values are quite similar. I supect the equal variance test gave a larger p value because the sample variances of a and b are so different. I think using the welch test gave us a better result since we didn't assume equal variance. In addition it was doubtful that our populations were normal (from qq plot) and our sample sizes were small, I suspect using the bootstrap was appropriate and therefore gave us a smaller p value. I believe the overall similarity is also due to the bootstrap creating a similarly-shaped distrbution to what a t-test would.
+

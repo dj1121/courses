@@ -1,0 +1,6 @@
+talk.politics.guns a:11 about:2 absurd:1
+talk.politics.guns a:33 abiding:2 able:1
+talk.politics.mideast a:3 acc:1 agreed:1
+talk.politics.mideast apr:1 armenia:2
+talk.politics.misc a:8 ajteel:1 am:1
+talk.politics.misc a:10 about:2 acts:1

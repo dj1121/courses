@@ -1,0 +1,77 @@
+% start S
+
+# Sentence productions
+S -> AUX NP[NUM=?n] VP[NUM=?n] PUNC
+S -> AUX NP[NUM=?n] PVP[NUM=?n] PUNC
+S -> WH AUX NP[NUM=?n] VP[NUM=?n] PUNC
+S -> WH AUX NP VP NP TV PUNC
+S -> WH AUX NP[NUM=?n] PVP[NUM=?n] PUNC
+S -> NP[NUM=?n, GEND=?g] VP[NUM=?n, GEND=?g] PUNC
+S -> NP[NUM=?n, GEND=?g] VP[NUM=?n, GEND=?g]
+S -> NP[NUM=?n] PVP[NUM=?n] PUNC
+
+# NP productions
+NP[NUM=?n] -> N[NUM=?n] 
+NP[NUM=?n, GEND=?g] -> PropN[NUM=?n, GEND=?g] 
+NP[NUM=?n] -> DET[NUM=?n] N[NUM=?n]
+NP[NUM=pl] -> N[NUM=pl]
+NP[GEND=?g] -> REFL[GEND=?g]
+
+# VP productions
+VP[TENSE=?t, NUM=?n] -> IV[TENSE=?t, NUM=?n]
+VP[TENSE=?t, NUM=?n] -> IV[TENSE=?t, NUM=?n] ADJ
+VP[TENSE=?t, NUM=?n, GEND=?g] -> TV[TENSE=?t, NUM=?n, GEND=?g] NP[GEND=?g]
+VP[TENSE=?t, NUM=?n] -> TV[TENSE=?t, NUM=?n] NP PP
+VP[TENSE=?t, NUM=?n] -> IV[TENSE=?t, NUM=?n] PPINT
+VP[TENSE=?t, NUM=?n] -> IV[TENSE=?t, NUM=?n] CP 
+VP[TENSE=?t, NUM=?n] -> TV[TENSE=?t, NUM=?n] CP
+VP -> BASEV
+
+# PVP (verb requiring preposition)
+PVP -> PV NP PP
+PVP -> PV PP
+
+# PP productions
+PP -> P NP
+PPINT -> P NUMB N | P PropN
+
+# CP productions (complementizer phrases)
+CP -> C S
+
+# Nouns
+PropN[NUM=sg, GEND=m]-> 'John'
+PropN[NUM=sg, GEND=f] -> 'Mary'
+PropN[NUM=sg] -> 'Tuesday'
+N[NUM=sg] -> 'dog' | 'cat' | 'book' | 'shelf' | 'summit'
+N[NUM=pl] -> 'dogs'| 'cats' | 'minutes'
+
+# WH
+WH -> 'what'
+
+# Auxiliaries (3rd implied)
+AUX[TENSE=pres, NUM=sg] -> 'does'
+AUX[TENSE=past] -> 'did'
+
+# Present tense plural (3rd implied, since our grammar doesn't need to account for 1st/2nd person)
+IV[TENSE=pres,  NUM=pl] -> 'bark' | 'know' | 'think'
+TV[TENSE=pres,  NUM=pl] -> 'know'
+
+# Present tense singular (3rd implied)
+IV[TENSE=pres, NUM=sg] -> 'barks'
+TV[TENSE=pres, NUM=sg] -> 'knows'
+
+# Past tense
+IV[TENSE=past] -> 'barked' | 'walked' | 'thought' | 'reached' | 'was'
+TV[TENSE=past] -> 'saw' | 'reached'
+
+# Miscellaneous other categories
+PV -> 'put' 
+DET -> 'the'
+P -> 'on' | 'for'
+C -> 'that'
+ADJ -> 'interesting'
+NUMB[NUM=pl] -> 'five' 
+PUNC -> '.' | '?'
+REFL[GEND=m] -> 'himself'
+REFL[GEND=f] -> 'herself'
+BASEV -> 'know'|'think'

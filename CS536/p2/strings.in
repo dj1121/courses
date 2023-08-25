@@ -1,0 +1,14 @@
+"unterminated
+"unterminated and bad escape \a
+"bad escape \a"
+"good good good"
+unterminated"
+""
+"&!88"
+"use \n to denote a newline character"
+"include a quote like this \" and a backslash like this \\"
+"also bad \"
+"bad \a"
+"backslash followed by space: \ is not allowed"
+"bad escaped character: \a AND not terminated
+"unterminated last line

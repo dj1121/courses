@@ -1,0 +1,17 @@
+a dog barks
+(S[SEM=<exists x.(dog(x) & exists e.(barking(e) & barker(e,x)))>]
+  (NP[SEM=<\P.exists x.(dog(x) & P(x))>]
+    (Det[SEM=<\Q P.exists x.(Q(x) & P(x))>] a)
+    (N[SEM=<\x.dog(x)>] dog))
+  (VP[SEM=<\x.exists e.(barking(e) & barker(e,x))>]
+    (IV[SEM=<\x.exists e.(barking(e) & barker(e,x))>] barks)))
+every dog barks
+(S[SEM=<all x.(dog(x) -> exists e.(barking(e) & barker(e,x)))>]
+  (NP[SEM=<\P.all x.(dog(x) -> P(x))>]
+    (Det[SEM=<\Q P.all x.(Q(x) -> P(x))>] every)
+    (N[SEM=<\x.dog(x)>] dog))
+  (VP[SEM=<\x.exists e.(barking(e) & barker(e,x))>]
+    (IV[SEM=<\x.exists e.(barking(e) & barker(e,x))>] barks)))
+
+
+

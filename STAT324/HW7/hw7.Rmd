@@ -1,0 +1,202 @@
+---
+title: "Stat 324 HW7: Hypothesis Tests for 2 Independent and Dependent Populations"
+author: "Devin Johnson, Dis. 313"
+date: "November 13, 2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+
+## Problem 1
+```{r}
+# Data for problem 1
+d2 = c(422,298,423,346,375,431,290)
+d1 = c(368,293,401,314,384,404,267)
+diffs = c()
+for(i in 0:length(d1)){
+  diffs = append(diffs, d2[i] - d1[i])
+}
+```
+
+**--1A: Hypothesis Test--**  
+$H_o:\mu_{d2} - \mu_{d1} = 5$  
+$H_a:\mu_{d2} - \mu_{d1} > 5$  
+$\alpha = 0.10$
+
+```{r}
+# Calculate matched pair test
+tobs = (mean(diffs) - 5) / (sd(diffs)/sqrt(length(diffs)))
+pval = pt(q = tobs, df = length(diffs) - 1, lower.tail = FALSE)
+cat(paste(" T stat:", tobs, "\n", "pval:", pval), "\n")
+
+# Check w/ R
+t.test(d2, d1, alternative = "greater", paired = TRUE, mu=5)
+```
+
+Since our p value < $\alpha$, we reject the null.
+
+**--1B: Assumptions for Part A--**
+
+* Populations are not independent  
+* IID samples  
+* Population of differences is normal or large enough sample size
+
+**--1C: 90% Confidence Interval--**
+```{r}
+# Calculate CI
+l = mean(diffs) - (abs(qt(0.10/2, length(diffs) - 1)) * (sd(diffs)/sqrt(length(diffs))))
+u = mean(diffs) + (abs(qt(0.10/2, length(diffs) - 1)) * (sd(diffs)/sqrt(length(diffs))))
+cat(paste(" Lower", l, "\n", "Upper:", u), "\n")
+
+# Check w/ R (using two sided test for two sided CI)
+t.test(d2, d1, alternative = "two.sided", paired = TRUE, mu=5, conf.level = 0.90)
+```
+
+The confidence interval tells us that we are 90% confident that the true difference in means falls within the given interal while the hypothesis only gives us evidence that the difference is > 5.
+
+## Problem 2
+ * Wilcoxon Rank Sum p-value: **0.028** (does not change since ranks are the same)  
+ * T test p-value: **Smaller than 0.006**. (the t-test will be more affected by larger differences in the two samples since it is based off real values and not just rank. This leads to more evidence and thus a smaller p value.)
+
+## Problem 3
+A paired design would mean that both samples are from the same test subjects. Since both measurments are taken after the same rainfall dates, one could argue that they are not necessarily independent. Thus we say paired.
+
+In this question we are not concerned with assumptions made so I choose:
+
+* Wilcoxon Signed Rank
+* Paired sample t test
+* Wilcoxon Signed rank test
+* Bootstrap test for one sample (differences)
+
+## Problem 4
+```{r}
+# Data for problem 4
+warm = c(214, 194, 221, 198, 212)
+cold = c(225, 215, 253, 272, 254)
+```
+$H_o:\mu_{cold} - \mu_{warm} = 0$  
+$H_a:\mu_{cold} - \mu_{warm} > 0$  
+$\alpha = 0.10$
+
+**--4A: Using Normal Assumption--**  
+We can use the 2 sample t test with either equal variance or non equal variance assumptions.  
+```{r}
+t.test(cold, warm, alternative = "greater", var.equal = FALSE)
+t.test(cold, warm, alternative = "greater", var.equal = TRUE)
+```
+
+**--4B/C: Using Non-Normal Assumption--**  
+We can use the bootstrap, wilcoxon rank sum, or permutation tests under the assumption that both populations independent and independent samples were taken.
+```{r}
+# Bootstrap function
+boottwo = function(dat1, dat2, nboot) {
+  bootstat = numeric(nboot)
+  obsdiff = mean(dat1) - mean(dat2)
+  n1 = length(dat1)
+  n2 = length(dat2)
+  for(i in 1:nboot) {
+    samp1 = sample(dat1, size = n1, replace = T)
+    samp2 = sample(dat2, size = n2, replace = T)
+    bootmean1 = mean(samp1)
+    bootmean2 = mean(samp2)
+    bootvar1 = var(samp1)
+    bootvar2 = var(samp2)
+    bootstat[i] = ((bootmean1 - bootmean2) - obsdiff)/sqrt((bootvar1/n1) + (bootvar2/n2))
+}
+  return(bootstat)
+}
+
+# Perform bootstrap
+set.seed(1)
+boot = boottwo(cold, warm, 10000)
+t_obs = (mean(cold) - mean(warm)) / sqrt((var(cold) / length(cold))  + (var(warm) / var(warm)))
+m_high = sum(boot > t_obs)
+pval = m_high/ 10000
+cat(paste(" T observed:", t_obs, "\n", "P Value:", pval))
+
+# Wilcoxon Rank Sum
+wilcox.test(cold, warm, alternative = "greater")
+
+# Permutation function
+permtwo <- function(dat1, dat2, nperm) {
+	permstat <- NULL
+	for(i in 1:nperm) {
+		n1 <- length(dat1)  #find length of first sample
+		n2 <- length(dat2)  #find length of second sample
+		alldat <- c(dat1, dat2)  #combine into 1 large sample
+		samp <- sample(alldat, replace=FALSE)  #shuffle the combined vector of values
+		pmean1 <- mean(samp[1:n1])   #find mean of first n1 observations as x1*-bar
+		pmean2 <- mean(samp[(n1+1):(n1+n2)]) #find mean of last n2 observations as x2*-bar
+		permstat[i] <- pmean1 - pmean2
+}
+	return(permstat)
+}
+
+# Perform the permutation
+set.seed(1)
+perm = permtwo(cold, warm, 10000)
+t_obs = mean(cold) - mean(warm)
+m_high = sum(perm >= t_obs)
+pval = m_high/10000
+cat(paste(" T observed:", t_obs, "\n", "P Value:", pval))
+```
+
+**--4D: Test Conclusions--**
+P values are below $\alpha$, so we hav sufficient evidence to reject the null hypothesis. This would suggest to the the scientists that cold temperatures could indeed raise blood pressure.
+
+
+## Problem 5
+```{r}
+# Data for problem 5
+n_urb = 140
+n_suburb = 160
+n_rural = 200
+success_urb = 83
+success_suburb = 92
+success_rural = 86
+```
+
+**--5A: Hypothesis Test--**  
+$H_o: \pi_{urb} - \pi_{suburb} = 0$  
+$H_a: \pi_{urb} - \pi_{suburb} \neq 0$  
+$\alpha = 0.05$  
+
+Asssumptions:
+
+* Populations independent
+* IID samples
+* Popualations approximately normal (by CLT)
+
+```{r}
+pihat_urb = success_urb / n_urb
+pihat_suburb = success_suburb / n_suburb
+pihat_rural = success_rural / n_rural
+pihat_ha = (success_suburb + success_urb) / (n_urb + n_suburb)
+
+z_obs = (pihat_urb - pihat_suburb - 0) / sqrt(pihat_ha * (1-pihat_ha) * ((1/n_urb) + (1/n_suburb)))
+pval = 2*pnorm(-abs(z_obs))
+cat(paste(" Z observed:", z_obs, "\n", "P Value:", pval))
+```
+
+Fail to reject null since pval $<\alpha$
+
+**--5B: 95% Confidence Interval--**  
+Asssumptions:
+
+* Populations independent
+* IID samples
+* Popualations approximately normal (by CLT)
+
+```{r}
+print(pihat_urb - pihat_rural)
+l = (pihat_rural - pihat_urb) - (1.96*sqrt((pihat_urb * (1-pihat_urb) / n_urb) + (pihat_rural * (1-pihat_rural) / n_rural)))
+u = (pihat_rural - pihat_urb) + (1.96*sqrt((pihat_urb * (1-pihat_urb) / n_urb) + (pihat_rural * (1-pihat_rural) / n_rural)))
+cat(paste(" Lower", l, "\n", "Upper:", u), "\n")
+```
+

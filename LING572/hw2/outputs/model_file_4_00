@@ -1,0 +1,14 @@
+be&matzadah&israel 2 talk.politics.guns 0.5 talk.politics.misc 0.5 talk.politics.mideast 0.0 
+!be&matzadah&israel 1 talk.politics.guns 1.0 talk.politics.mideast 0.0 talk.politics.misc 0.0 
+us&jack&!matzadah&israel 5 talk.politics.mideast 1.0 talk.politics.guns 0.0 talk.politics.misc 0.0 
+!us&jack&!matzadah&israel 11 talk.politics.mideast 0.45454545454545453 talk.politics.misc 0.5454545454545454 talk.politics.guns 0.0 
+repeated&!jack&!matzadah&israel 8 talk.politics.guns 0.25 talk.politics.mideast 0.75 talk.politics.misc 0.0 
+!repeated&!jack&!matzadah&israel 323 talk.politics.mideast 0.9628482972136223 talk.politics.misc 0.03715170278637771 talk.politics.guns 0.0 
+race&blaze&turkish&!israel 3 talk.politics.mideast 1.0 talk.politics.guns 0.0 talk.politics.misc 0.0 
+!race&blaze&turkish&!israel 12 talk.politics.mideast 0.5 talk.politics.misc 0.5 talk.politics.guns 0.0 
+canadian&!blaze&turkish&!israel 1 talk.politics.misc 1.0 talk.politics.guns 0.0 talk.politics.mideast 0.0 
+!canadian&!blaze&turkish&!israel 173 talk.politics.mideast 0.9942196531791907 talk.politics.misc 0.005780346820809248 talk.politics.guns 0.0 
+homeland&gun&!turkish&!israel 3 talk.politics.mideast 1.0 talk.politics.guns 0.0 talk.politics.misc 0.0 
+!homeland&gun&!turkish&!israel 343 talk.politics.guns 0.8542274052478134 talk.politics.misc 0.1457725947521866 talk.politics.mideast 0.0 
+fbi&!gun&!turkish&!israel 271 talk.politics.guns 0.6605166051660517 talk.politics.mideast 0.014760147601476014 talk.politics.misc 0.3247232472324723 
+!fbi&!gun&!turkish&!israel 1544 talk.politics.guns 0.27461139896373055 talk.politics.mideast 0.24935233160621761 talk.politics.misc 0.47603626943005184 

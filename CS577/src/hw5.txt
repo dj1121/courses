@@ -1,0 +1,107 @@
+Devin Johnson
+Benjamin Challe
+CS 577 HW 5
+
+-------------------
+|     PART A      |
+-------------------
+Let v = 10 and k = 1. The algorithm fails on input {(50,70), (25,25), (20,15)} because we can achieve a smaller time by applying
+the extra speed to (20,15) instead of (50,70).
+
+-------------------
+|     PART B      |
+-------------------
+Let v = 10 and k = 1. The algorithm fails on input {(5,15), (25,25), (50,70)} because we can achieve a smaller time by applying
+the extra speed to (25,25) instead of (5,15).
+
+-------------------
+|     PART C      |
+-------------------
+----Idea----
+Let n_i represent the i'th tuple. Let n_i1 and n_i2 represent the first and second elements of the i'th tuple. The idea for our algorithm is to simply sort
+the list of n tuples in descending order by ((n_i1/n_i2) - (n_i1/n_i2 + v)). In other words, we are sorting the segments from biggest time effect when applying v
+to smallest time effect. This can be done with a slight modification to the merge sort algorithm namely by changing the if-condition at the merge step. For example,
+if we had {(15,30), (25,25)}, then we'd have ((15/30) - (15/31)) versus ((20/25) - (20/26)) which is the same as .02 vs .03 so we would want to sor the list as 
+{(25,25), (15,30)} since we want to make the biggest impact on our time in order to minimize it so we want the larger effects to come first. 
+
+Once our list is sorted, we can apply the extra speed v to the first k elements in our list and sum of the times taken on each segment. This will give us the 
+optimal way (or one of the optimal ways) to distribute the extra speed v in order to minimize the travel time. We can do this in one for loop so 
+at the same time that we apply the extra speed to the segments, we can calculate the time taken on that segment by dividing n_i1/n_i2 and add to a total sum 
+of all tuples n_i1/n_i2 results. This sum is what we will return in the end. So, for our previous example which was sorted to be {(25,25), (15,30)}. If k = 1 
+and v = 1, we can loop over the tuples and sum of the results: (25/26) + (15/30) = 0.96 + 0.5 = 1.45.
+
+----Complexity----
+Our merge sort still takes O(nlogn) time since all we changed was the comparison method. After the merge sort we loop over the whole list once which would be 
+a time compelxity of O(n). So, in total, the algorithm would be O(nlogn) + O(n) which can simplify to O(nlogn).
+
+----Correctness----
+Our algorithm is greedy in that it always picks the largest time effect to place first into the sorted array at each step of merging. In this way, we are applying
+the extra speed where it will give the most effect in our overall time. We need to show that this approach results in the lowest sum of times over the 
+whole resulting array. Since it is our goal to minimize the total time taken to travel to work, we want to pick a way to distribute our extra speed that will maximize
+the overall time reduction. Therefore, when comparing two tuples, we move the one which produces the greatest time reduction by adding V to the denominator as far left
+in our sorted list as possible while maintaining a sorted order. In this way, we guarantee that those with greater effects on the overall time will have V applied to them
+as early as possible in the later stage of our algorithm when computing the minimum time. Once sorting is done, since we simply apply V to the first k elements and those 
+k elements are sorted in decreasing order, we know we are applying V in the most optimal way to reduce our time.
+
+In a more formal manner, we can argue that our greedy algorithm G "stays ahead" of another arbitrary optimal algorithm called S given that we have sorted it in the manner
+described above. Since G sorts by the largest difference in time, the sum of times after applying V in each of G's subsolutions is always less than or equal
+to the sum of times after applying  in each of S's subsolutions. When the two algorithms disagree on an order of sorting, we will say our G algorithm produces a subsolution
+g_0 + g_1 + g_2....+ g_n where g_i is an element in sorted list of the subsolution. If we apply v to any k of the elements in g_0...g_n and do the same with S, the resulting
+sum of g_0...g_n after applying v must be <= the resulting sum in S given our method of sorting all of G's subsolutions in descending order of time reduction. Therefore our
+algorithm stays ahead. 
+
+
+----Code----
+Input: List of n tuples giving road length and speed limit to represent segments of road and integers v and k.
+Output: Minimal time taken when applying extra speed v to the first k of the n segments.
+procedure minTime(A[0,...,n-1], v , k){
+    A = mergeSort(A, v)
+    sum = 0
+    for(i from 0 to length(A) - 1 inclusive){
+        if(i+1 <= k){
+            sum = sum + (A[i].roadlength / (A[i].speedlimit + v))
+        }
+        else{
+            sum = sum + (A[i].roadlength / A[i].speedlimit)
+        }
+    }
+    return sum
+}
+
+procedure mergeSort(A[0,..,n-1], v){
+        left = mergesort(A[0,...,n/2], v)
+        right = mergesort(A[n/2+1,...,n], v)
+        sorted = merge(left, right, v)
+        return sorted
+}
+
+procedure merge(left[0,...,n-1], right[0,...,n-1], v){
+    combined = new Array[left.length + r.length]
+    lIndex, rIndex, cIndex = 0
+    
+    while(lIndex < left.length and rIndex < r.length){
+    effectOnRight = (((right[lIndex].roadlength/right[lIndex].speedlimit)-(right[lIndex].roadlength/(right[lIndex].speedlimit + V)))
+    effectOnLeft = (((left[lIndex].roadlength/left[lIndex].speedlimit)-(left[lIndex].roadlength/(left[lIndex].speedlimit + V)))
+    
+            if (effectOnLeft >= effectOnRight){
+                combined[cIndex] = l[lIndex] 
+                lIndex = lIndex + 1
+            }
+            else {
+                combined[cIndex] = right[rIndex]
+                rIndex = rIndex + 1
+            }
+            cIndex = cIndex + 1
+        }
+        while(lIndex < l.length){
+            combined[cIndex] = left[lIndex]
+            lIndex = lIndex + 1
+            cIndex = lIndex + 1
+        }
+        while(rIndex< r.length){
+            combined[cIndex] = right[rIndex]
+            rIndex = rIndex + 1
+            cIndex = cIndex + 1
+        }
+        return combined
+}

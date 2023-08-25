@@ -1,0 +1,2 @@
+- Please invoke using ./hw3_parser.sh <grammar> <sentences> <output>
+- Some parse trees may not be drawn in same order as output, but the parses and number of parses match.

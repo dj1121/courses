@@ -1,0 +1,274 @@
+---
+title: "Stat 324 HW8: ANOVA and Regression"
+author: "Devin Johnson, Dis. 313"
+date: "December 3, 2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+
+## Problem 1
+```{r}
+# Data for problem 1
+t1 = c(63, 54, 69, 50, 72)
+t2 = c(45, 60, 40, 56)
+t3 = c(31, 40, 45, 25, 23, 28)
+df = data.frame(treatment=c(rep("t1",5), rep("t2", 4), rep("t3", 6)), Data=c(t1, t2, t3))
+anova_obj = aov(Data~treatment, data=df)
+```
+
+**--1A: Graph--**  
+```{r}
+require(ggplot2)
+ggplot(data=df, aes(x=treatment, y=Data, color=treatment))+  geom_jitter(width=0.1)+  theme_bw()
+
+```
+
+I'm using a dot plot to get a combined picture of all groups. It tells me the approximate variance of the data.
+
+**--1B: Summary Stats--**  
+```{r}
+# Basic stats
+xbar_1 = mean(t1); xbar_2 = mean(t2); xbar_3 = mean(t3) 
+n_1 = length(t1); n_2 = length(t2); n_3 = length(t3)
+sd_1 = sd(t1); sd_2 = sd(t2); sd_3 = sd(t3)
+xbar_grand = mean(df$Data); n_grand = length(df$Data); k = 3
+```
+
+**--1C: ANOVA Calculations/Table--**
+```{r}
+# MSE
+sse = 0
+for (val in t1){
+  sse = sse + (val-xbar_1)^2
+}
+for (val in t2){
+  sse = sse + (val-xbar_2)^2
+}
+for (val in t3){
+  sse = sse + (val-xbar_3)^2
+}
+mse = sse/(n_grand - k)
+
+# MST
+sst = n_1*(xbar_1 - xbar_grand)^2 + n_2*(xbar_2 - xbar_grand)^2 + n_3*(xbar_3 - xbar_grand)^2
+mst = sst/(k - 1)
+
+# F Stat
+fstat = mst / mse
+
+table = data.frame(
+   source = c("Treatment", "Error", "Total"), 
+   df = c(k-1, n_grand-k, n_grand-1),
+   ss = c(sst, sse, sse+sst),
+   ms = c(mst, mse, "-"),
+   f = c(fstat, "-", "-"),
+   pval = c("<.001", "-", "-"),
+   stringsAsFactors = FALSE
+)
+print(table)
+
+# Check with R
+summary(anova_obj)
+```
+
+**--1D: ANOVA Assumptions--**  
+In ANOVA, we must assume equal variance in the groups as well as independence/random selection within groups and independence between groups. We also need to assume normal residuals. Based on the graph featured in part A, it would seem safe to assume equal variance of the groups. This is supported by the calculations of summary statistics in part B. Based on the experimental design, groups were definitely independent and observations within each group can be argued to be independent since taking a measurement of minutes of sleep shouldn't affect others. Residuals can be assumed normal by plots below:
+
+```{r}
+hist(anova_obj$residuals)
+qqnorm(anova_obj$residuals)
+```
+
+
+**--1E: Test Conclusions--**  
+Since p<0.001 from F table, we can say that at least two groups are significantly different. We can make pairwise confidence intervals to test further.
+
+**--1F: Tukey CI--**  
+```{r}
+tukey_mult = qtukey(p=(1-0.05), nmeans = 3, df = 12)/sqrt(2)
+t1t2_low = abs(xbar_1 - xbar_2) - (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_2))))
+t1t2_high = abs(xbar_1 - xbar_2) + (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_2))))
+t1t3_low = abs(xbar_1 - xbar_3) - (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_3))))
+t1t3_high = abs(xbar_1 - xbar_3) + (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_3))))
+t2t3_low = abs(xbar_2 - xbar_3) - (tukey_mult*sqrt(mse*((1/n_2) + 1/(n_3))))
+t2t3_high = abs(xbar_2 - xbar_3) + (tukey_mult*sqrt(mse*((1/n_2) + 1/(n_3))))
+
+paste("T1 vs T2:", "(", t1t2_low, ",",  t1t2_high, ")", sep="")
+paste("T1 vs T3:", "(", t1t3_low, ",",  t1t3_high, ")", sep="")
+paste("T2 vs T3:", "(", t2t3_low, ",",  t2t3_high, ")", sep="")
+```
+We can label as follows: t3 = A, t2 = B, t1 = B since the differences between t2 and t3 and t1 and t3 are signifcant.
+
+
+**--1G: Bonferroni Multiplier--**  
+```{r}
+bonf_mult = qt(p=(0.05/6), df = 12 , lower.tail = FALSE)
+print(tukey_mult)
+print(bonf_mult)
+print(abs(tukey_mult-bonf_mult))
+```
+
+
+**--1H: Kruskal-Wallis and Wilcoxon--**  
+```{r}
+kruskal.test(Data~treatment, data=df)
+wilcox.test(t1, t2)
+wilcox.test(t1, t3)
+wilcox.test(t2, t3)
+```
+Less strong evidence against null. When comparing with bonferroni adjustment, the pairwise comparison between t1 and t3 is significant.
+
+
+## Problem 2  
+**--2A: ANOVA Table--**
+```{r}
+# Data for problem 2
+xbar_1 = 39.1; xbar_2 = 29.9; xbar_3 = 45.9
+n_1 = 9; n_2 = 8; n_3 = 10
+sd_1 = sqrt(24.6); sd_2 = sqrt(16.4); sd_3 = sqrt(10.3)
+xbar_grand = (xbar_1 + xbar_2 + xbar_3)/3 ; n_grand = n_1 + n_2 + n_3; k = 3
+
+# MSE (how to get from just standard deviation???)
+sse = 404.3672
+mse = sse/(n_grand - k)
+
+# MST
+sst = n_1*(xbar_1 - xbar_grand)^2 + n_2*(xbar_2 - xbar_grand)^2 + n_3*(xbar_3 - xbar_grand)^2
+mst = sst/(k - 1) 
+
+# F Stat
+fstat = mst / mse
+
+table = data.frame(
+   source = c("Treatment", "Error", "Total"), 
+   df = c(k-1, n_grand-k, n_grand-1),
+   ss = c(sst, sse, sse+sst),
+   ms = c(mst, mse, "-"),
+   f = c(fstat, "-", "-"),
+   pval = c("<.000", "-", "-"),
+   stringsAsFactors = FALSE
+)
+print(table)
+```
+
+**--2B: F Test--**
+The result from part A is signifcant, so we make pairwise confidence intervals. (TukeyHSD)
+```{r}
+tukey_mult = qtukey(p=(1-0.05), nmeans = 3, df = 24)/sqrt(2)
+t1t2_low = abs(xbar_1 - xbar_2) - (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_2))))
+t1t2_high = abs(xbar_1 - xbar_2) + (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_2))))
+t1t3_low = abs(xbar_1 - xbar_3) - (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_3))))
+t1t3_high = abs(xbar_1 - xbar_3) + (tukey_mult*sqrt(mse*((1/n_1) + 1/(n_3))))
+t2t3_low = abs(xbar_2 - xbar_3) - (tukey_mult*sqrt(mse*((1/n_2) + 1/(n_3))))
+t2t3_high = abs(xbar_2 - xbar_3) + (tukey_mult*sqrt(mse*((1/n_2) + 1/(n_3))))
+
+paste("T1 vs T2:", "(", t1t2_low, ",",  t1t2_high, ")", sep="")
+paste("T1 vs T3:", "(", t1t3_low, ",",  t1t3_high, ")", sep="")
+paste("T2 vs T3:", "(", t2t3_low, ",",  t2t3_high, ")", sep="")
+```
+When assigning letters to the results we get: A, B, and C for T1, T2, and T3 respectively since diferences between all groups are significant
+
+
+## Problem 3  
+**--3A: Plot--**  
+```{r}
+particulate = c(11.6, 15.9, 15.7, 7.9, 6.3, 13.7, 13.1, 10.8, 6.0, 7.6, 14.8, 7.4, 16.2, 13.1, 11.2)
+asthma = c(14.5, 16.6, 16.5, 12.6, 12.0, 15.8, 15.1, 14.2, 12.2, 13.1, 16.0, 13.5, 16.4, 15.4, 14.4)
+plot(particulate~asthma, ylab="Particulate", xlab="% Asthma", ylim=c(5, 20), xlim=c(5, 20))
+```
+
+Seems to be a strong positive linear correlation between particulates and asthma in the observed data.  
+
+**--3B: Correlation Coefficient--**
+```{r}
+print(sum((particulate-mean(particulate))*(asthma-mean(asthma)))/(sqrt(sum((particulate-mean(particulate))^2)*sum((asthma-mean(asthma))^2))))
+cor(particulate, asthma)
+```
+
+**--3C: Model--**
+```{r}
+beta_1 = cor(particulate, asthma) * sd(asthma) / sd(particulate)
+beta_0 = mean(asthma) - (beta_1*mean(particulate))
+paste("Slope: ",beta_1, sep ="")
+paste("Intercept: ",beta_0, sep = "")
+```
+
+Slope and intercept suggest that each time particulate increased, there will be an increase of about 0.43% in asthma rate.
+
+**--3D: Graphical Interpretation--**
+```{r}
+mod = lm(asthma~particulate)
+require(ggplot2)
+ggplot(data=data.frame(particulate, asthma), aes(x=particulate, y=asthma))+
+  geom_point()+
+  geom_smooth(method="lm", se=TRUE)
+plot(mod)
+```
+
+Considering assumptions that we can tell from the model, there are no clear deviations from constant variance or curvature of residuals.
+
+**--3E/F: Test Slope and R^2--**  
+$H_o: \beta_1 = 0$  
+$H_a: \beta_1 \neq 0$  
+$\alpha = 0.5$  
+
+```{r}
+summary(mod)
+```
+
+P-value is extremely significant so slop is highly significant. We can't say that increased particulate causes increased asthma. R^2 = 0.97 so regression on particulate accounts for ~97.1% of variation in asthma.
+
+**--3G/H/I/J: Confidence Intervals--**  
+```{r}
+# G
+se = 0.28*sqrt(1 + 1/15 + (13-11.42)^2/(14-13.05))
+upper = 15.2 + 0.63
+lower = 15.2 - 0.63
+paste("CI G:", "(", lower, ",",  upper, ")", sep="")
+
+# H
+se = 0.28*sqrt(1/15 + (10-11.42)^2/(14 + 13.05))
+upper = 13.91 + 0.17
+lower = 13.91 - 0.17
+paste("CI H:", "(", lower, ",",  upper, ")", sep="")
+
+# I
+# 3ppm is outside values of x user to build the model. Therefore using a confidence interval would not yield reliable results.
+
+# J
+# Since there is a smaller standard error, the interval at x=12 is narrower (it's closer to xbar = 11.42)
+
+```
+
+**--4A: Least Squares Estimates--**
+```{r}
+b_1 = 10360/11000
+b_0 = 47.91 - (b_1 * 50)
+
+print(b_0)
+print(b_1)
+```
+
+**--4B: Hypothesis Test--**  
+$H_0: \beta_1 = 1$  
+$H_a: \beta_1 \neq 1$  
+$\alpha = .01$
+
+```{r}
+sse = 11.67
+mse = sse/9
+t = (b_1 - 1) / (sqrt(mse/(11000)))
+print(t)
+2*pt(-abs(t),df = 9)
+```
+
+There is strong evidence against the null hypothesis that $\beta_1 = 1$
+
+

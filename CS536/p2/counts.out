@@ -1,0 +1,8 @@
+1:1 "this is line one"
+4:1 "this is line 4"
+6:1 2147483647
+7:1 "this should still be line 7"
+8:1 int
+8:5 bool
+8:10 "test on line 8 starts at char 10"
+9:1 "line 9"

@@ -1,0 +1,243 @@
+<?xml version="1.0"?>
+<pset>
+
+    <!--
+        CS 564, FALL 2018
+        PROBLEM SET 1 SUBMISSION TEMPLATE
+
+        Please copy and paste your SQL queries into the appropriate spots below. 
+
+        When submitting SQL queries, please do not include the initial 
+        %sql or %%sql IPython commands. Just include the SQL code.
+
+        DO NOT DELETE THE <![CDATA[ ... ]]> LINES IN EACH <answer> TAG!
+        Doing so will break the autograder. To avoid accidentally breaking
+        something, please leave all existing comments in this template
+        intact in your submission.
+    -->
+
+    <student>
+        <name>
+            <!-- Insert your full name on the line below. -->
+            Devin Johnson
+        </name>
+        <netid>
+            <!-- Insert your NetID (NOT your student ID number!) below. -->
+            djohnson58
+        </netid>
+        <studentid>
+            <!-- Insert your student ID number below. -->
+            9072937353
+        </studentid>
+    </student>
+
+
+    <!-- BEGIN PROBLEM 1 -->
+    <answer number="1a">
+        <!-- Paste your solution to problem 1, part (a) below this line. --><![CDATA[
+        select j as i, i as j, val 
+        from A 
+        order by i
+        ]]><!-- End problem 1, part (a). -->
+    </answer>
+    <answer number="1b">
+        <!-- Paste your solution to problem 1, part (b) below this line. --><![CDATA[
+        select SUM(A.val * B.val)
+        from A,B
+        where A.j = 1 and B.j = 2 and A.i = B.i
+        ]]><!-- End problem 1, part (b). -->
+    </answer>
+    <answer number="1c">
+        <!-- Paste your solution to problem 1, part (c) below this line. --><![CDATA[
+        select SUM(A.val * B.val)
+        from A,B
+        where A.i = 1 and B.j = 2 and A.j = B.i
+        ]]><!-- End problem 1, part (c). -->
+    </answer>
+    <answer number="1d">
+        <!-- Paste your solution to problem 1, part (d) below this line. --><![CDATA[
+         select a.i, b.j, sum(a.val * b.val) as val
+         from a,b
+         where a.j = b.i
+         group by a.i, b.j
+        ]]><!-- End problem 1, part (d). -->
+    </answer>
+    <!-- END PROBLEM 1 -->
+
+
+    <!-- BEGIN PROBLEM 2 -->
+    <answer number="2a">
+        <!-- Paste your solution to problem 2, part (a) below this line. --><![CDATA[
+        with y as (select Sales.Store as Store, round(SUM(WeeklySales),2) as AllSales from (Sales, Holidays) where Sales.WeekDate =   Holidays.WeekDate and Holidays.IsHoliday = "TRUE" group by Store)
+        select * 
+        from y
+where y.AllSales = (select MAX(y.AllSales) from y) or y.AllSales = (select MIN(y.AllSales) from y); 
+        ]]><!-- End problem 2, part (a). -->
+    </answer>
+    <answer number="2b">
+        <!-- Paste your solution to problem 2, part (b) below this line. --><![CDATA[
+        with
+        x as (select sum(WeeklySales) as sums_weekly from Sales, Holidays where IsHoliday = "FALSE" and Sales.WeekDate = Holidays.WeekDate group by Sales.WeekDate),
+        y as (select sum(WeeklySales) as sums_weekly from Sales, Holidays where IsHoliday = "TRUE" and Sales.WeekDate = Holidays.WeekDate group by Sales.WeekDate),
+        z as (select avg(y.sums_weekly) as sum_avg from y)
+        
+select count(x.sums_weekly) as NumNonHolidays from z, x where x.sums_weekly > z.sum_avg
+        ]]><!-- End problem 2, part (b). -->
+    </answer>
+    <answer number="2c">
+        <!-- Paste your solution to problem 2, part (c) below this line. --><![CDATA[
+        select Stores.Type, substr(Sales.WeekDate, 6, 2) as Month, round(sum(Sales.WeeklySales), 2) as TotalSales 
+        from Sales, Stores
+        where Sales.Store = Stores.Store
+        group by Type, Month
+        order by Type
+        ]]><!-- End problem 2, part (c). -->
+    </answer>
+    <answer number="2d">
+        <!-- Paste your solution to problem 2, part (d) below this line. --><![CDATA[
+        /* Create results table */
+        drop table if exists results;
+        create table results (
+            AttributeName VARCHAR(20),
+            CorrelationSign integer
+        );
+        insert into results (AttributeName, CorrelationSign)
+        VALUES ("Temperature", 0);
+        insert into results (AttributeName, CorrelationSign)
+        VALUES ("FuelPrice", 0);
+        insert into results (AttributeName, CorrelationSign)
+        VALUES ("CPI", 0);
+        insert into results (AttributeName, CorrelationSign)
+        VALUES ("UnemploymentRate", 0);
+
+
+        /* Create coefficients table */
+        drop table if exists coefficients;
+        create table coefficients (
+            Temperature integer,
+            FuelPrice integer,
+            CPI integer,
+            UnemploymentRate integer
+        );
+
+
+        /* Find values and put into coefficients table */
+        with 
+        x as(select avg(Temperature) as temp, avg(FuelPrice) as fuel, avg(CPI) as cpi, avg(UnemploymentRate) as ur from TemporalData),
+        y as(select avg(WeeklySales) as average_sales from Sales)
+
+        insert into coefficients
+        select
+        sum((Sales.WeeklySales - y.average_sales) * (TemporalData.Temperature - x.temp)),
+        sum((Sales.WeeklySales - y.average_sales) * (TemporalData.FuelPrice - x.fuel)),
+        sum((Sales.WeeklySales - y.average_sales) * (TemporalData.CPI - x.cpi)),
+        sum((Sales.WeeklySales - y.average_sales) * (TemporalData.UnemploymentRate - x.ur))
+        from TemporalData, Sales, x, y
+        where TemporalData.WeekDate = Sales.WeekDate and TemporalData.Store = Sales.Store;
+
+
+        /* Update results table */
+        update results
+        set CorrelationSign = (select Temperature from coefficients) 
+        where exists (select Temperature from coefficients) and AttributeName = "Temperature";
+
+        update results
+        set CorrelationSign = (select FuelPrice from coefficients) 
+        where exists (select Temperature from coefficients) and AttributeName = "FuelPrice";
+
+        update results
+        set CorrelationSign = (select CPI from coefficients) 
+        where exists (select Temperature from coefficients) and AttributeName = "CPI";
+
+        update results
+        set CorrelationSign = (select UnemploymentRate from coefficients) 
+        where exists (select Temperature from coefficients) and AttributeName = "UnemploymentRate";
+
+        update results
+        set CorrelationSign = -1 
+        where CorrelationSign < 0;
+
+        update results
+        set CorrelationSign = 1
+        where CorrelationSign > 0;
+
+        update results
+        set CorrelationSign = 0
+        where CorrelationSign = 0;
+
+
+        /* Output results table */
+        select * from results
+        ]]><!-- End problem 2, part (d). -->
+    </answer>
+    <!-- END PROBLEM 2 -->
+
+
+    <!-- BEGIN PROBLEM 3 -->
+    <answer number="3a">
+        <!-- Paste your solution to problem 3, part (a) below this line. --><![CDATA[
+        select B as company, d as distance
+        from streets
+        where A = "UW-Madison" and d <= 10
+        union
+        select s2.B as company, s1.d + s2.d as distance
+        from streets s1, streets s2
+        where s1.a = "UW-Madison" and (s1.B = s2.A and s2.B != s1.A) and (s1.d + s2.d <= 10)  
+        union
+        select s3.B as company, s1.d + s2.d + s3.d as distance
+        from streets s1, streets s2, streets s3
+        where s1.a = "UW-Madison" and (s1.B = s2.A and s2.B = s3.A) and (s2.B != s1.A and s3.B != s2.A and s3.B != s1.A)
+        and (s1.d + s2.d + s3.d <= 10);
+        ]]><!-- End problem 3, part (a). -->
+    </answer>
+    <answer number="3b">
+        <!-- Paste your solution to problem 3, part (b) below this line. --><![CDATA[
+        drop view if exists within_3_uw;
+        create view within_3_uw as 
+        select B as company, d as distance
+        from streets
+        where A = "UW-Madison"
+        union
+        select s2.B as company, s1.d + s2.d as distance
+        from streets s1, streets s2
+        where s1.a = "UW-Madison" and (s1.B = s2.A and s2.B != s1.A)
+        union
+        select s3.B as company, s1.d + s2.d + s3.d as distance
+        from streets s1, streets s2, streets s3
+        where s1.a = "UW-Madison" and (s1.B = s2.A and s2.B = s3.A) and (s2.B != s1.A and s3.B != s2.A and s3.B != s1.A);
+
+        select a.company as company_1, b.company as company_2, a.distance + b.distance as distance
+        from within_3_uw a, within_3_uw b
+        where a.distance + b.distance <= 15 and a.company != b.company
+        ]]><!-- End problem 3, part (b). -->
+    </answer>
+    <answer number="3c">
+        <!-- Paste your solution to problem 3, part (c) below this line. --><![CDATA[
+        with cycle as (
+        select s1.A as s1, s3.A as s3
+        from streets s1 join streets s2 on s1.B = s2.A join streets s3 on s2.B = s3.A and s3.B = s1.A
+        limit 1)
+
+        delete from streets
+        where exists(
+        select 1
+        from cycle c
+        where (streets.A = c.s1 and streets.B = c.s3) or (streets.A = c.s3 and streets.B = c.s1));
+        ]]><!-- End problem 3, part (c). -->
+    </answer>
+    <answer number="3d">
+        <!-- Paste your solution to problem 3, part (d) below this line. --><![CDATA[
+        with recursive 
+            pos_paths(a, b, b_prev, d) as (
+                select A, B, A, d from streets
+                union all
+                select p.a, s.B, s.A, p.d + s.d
+                from pos_paths p, streets s
+                where p.b = s.A and s.B <> p.a and s.B <> p.b_prev)
+        select a as A, b as B, max(d) as distance from pos_paths;
+        ]]><!-- End problem 3, part (d). -->
+    </answer>
+    <!-- END PROBLEM 3 -->
+
+
+</pset>
